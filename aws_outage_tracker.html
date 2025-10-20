@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Outage - Status Update</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            animation: slideDown 0.6s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        header h1 {
+            color: #d63031;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 20px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .outage-time {
+            margin-top: 15px;
+            font-size: 0.95em;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.8s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .resolution-tracker {
+            margin-top: 15px;
+        }
+
+        .tracker-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .tracker-step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .step-pending {
+            background: #bdc3c7;
+        }
+
+        .step-active {
+            background: #f39c12;
+            animation: glow 1.5s infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 10px #f39c12; }
+            50% { box-shadow: 0 0 20px #f39c12; }
+        }
+
+        .step-complete {
+            background: #27ae60;
+        }
+
+        .tracker-text {
+            line-height: 1.4;
+        }
+
+        .tracker-text strong {
+            color: #333;
+        }
+
+        .tracker-time {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .search-container {
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #764ba2;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .affected-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .affected-item {
+            padding: 12px;
+            background: #f8f9fa;
+            border-left: 4px solid #e74c3c;
+            border-radius: 4px;
+            font-size: 0.95em;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .affected-item:hover {
+            background: #fff3cd;
+            transform: translateX(5px);
+        }
+
+        .affected-item.found {
+            background: #d4edda;
+            border-left-color: #27ae60;
+        }
+
+        .thread-updates {
+            margin-top: 20px;
+        }
+
+        .update-item {
+            padding: 15px;
+            background: #f0f3ff;
+            border-left: 4px solid #667eea;
+            margin-bottom: 12px;
+            border-radius: 4px;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .update-time {
+            font-size: 0.85em;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .update-text {
+            font-size: 0.95em;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .contact-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+
+        .contact-card h2 {
+            color: white;
+            border-bottom-color: white;
+        }
+
+        .contact-info {
+            margin-top: 20px;
+            display: grid;
+            gap: 15px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .contact-icon {
+            font-size: 1.3em;
+            margin-right: 15px;
+            min-width: 30px;
+        }
+
+        .contact-details {
+            line-height: 1.6;
+        }
+
+        .contact-details strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .no-results {
+            text-align: center;
+            color: #27ae60;
+            padding: 20px;
+            font-size: 1.1em;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 id="headerTitle">⚠️ Service Outage Alert</h1>
+            <span class="status-badge" id="statusBadge">ONGOING</span>
+            <div class="outage-time" id="outageInfo">
+                <strong>Outage Started:</strong> <span id="startTime">Loading...</span><br>
+                <strong>Root Cause:</strong> <span id="rootCause">Loading...</span><br>
+                <strong>Impact:</strong> <span id="impact">Loading...</span>
+            </div>
+        </header>
+
+        <div class="main-grid">
+            <!-- Resolution Tracker -->
+            <div class="card">
+                <h2>📊 Resolution Tracker</h2>
+                <div class="resolution-tracker" id="tracker"></div>
+            </div>
+
+            <!-- Affected Services Search -->
+            <div class="card">
+                <h2>🔍 Check Your Service Status</h2>
+                <div class="search-container">
+                    <input 
+                        type="text" 
+                        class="search-box" 
+                        id="searchBox" 
+                        placeholder="Search for your app or website..."
+                    >
+                </div>
+                <div class="no-results" id="noResults">
+                    ✓ Your service is not affected!
+                </div>
+                <div class="affected-list" id="serviceList"></div>
+            </div>
+        </div>
+
+        <!-- Thread Updates -->
+        <div class="card">
+            <h2>📡 Live Status Updates</h2>
+            <div class="thread-updates" id="updates"></div>
+        </div>
+
+        <!-- Contact Card -->
+        <div class="contact-card">
+            <h2 id="companyName">📞 Support Team</h2>
+            <div class="contact-info" id="contactInfo"></div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // CUSTOMIZE THIS SECTION FOR EACH OUTAGE
+        // ========================================
+        
+        const outageConfig = {
+            // Header Information
+            title: "⚠️ AWS Outage Alert",
+            status: "ONGOING - MOSTLY RECOVERED",
+            startTime: "October 20, 2025 at 12:11 AM PDT (3:11 AM ET, 8:11 AM BST)",
+            rootCause: "DNS issue with DynamoDB database service in US-EAST-1 Region (Northern Virginia)",
+            impact: "Multiple AWS services affected, causing widespread disruptions across hundreds of websites and applications",
+            
+            // Resolution Tracker Steps
+            // Format: { description, details, status: 'complete'|'active'|'pending' }
+            trackerSteps: [
+                {
+                    description: "Issue Identified",
+                    details: "3:03 AM PDT - DNS/DynamoDB error detected",
+                    status: "complete"
+                },
+                {
+                    description: "Mitigation Deployed",
+                    details: "3:35 AM PDT - Root cause fully mitigated",
+                    status: "complete"
+                },
+                {
+                    description: "Recovery In Progress",
+                    details: "6:35 AM PDT - Most services recovering, some throttling",
+                    status: "active"
+                },
+                {
+                    description: "Full Resolution",
+                    details: "Expected within the hour - Service normalization",
+                    status: "pending"
+                }
+            ],
+            
+            // Affected Services List
+            affectedServices: [
+                'Snapchat', 'Roblox', 'Fortnite', 'Ring', 'Coinbase', 'Venmo',
+                'Reddit', 'Wordle', 'Duolingo', 'Disney+', 'Amazon', 'Prime Video',
+                'Alexa', 'Signal', 'PlayStation', 'Slack', 'Canva', 'Perplexity',
+                'Robinhood', 'Airtable', 'Epic Games Store', 'Clash Royale',
+                'Brawl Stars', 'Lyft', "McDonald's App", 'The New York Times',
+                'T-Mobile', 'United Airlines', 'Verizon', 'Gov.uk', 'HM Revenue',
+                'Lloyds Bank', 'Halifax Bank', 'Apple Music', 'Spotify'
+            ],
+            
+            // Status Updates (newest first)
+            // Format: { time, text }
+            updates: [
+                { time: '6:39 AM PDT', text: 'LATEST: "The underlying DNS issue has been fully mitigated, and most AWS Service operations are succeeding normally now. Some requests may be throttled while we work toward full resolution."' },
+                { time: '6:35 AM PDT', text: 'Major update: Database issue resolved. Most services reporting successful operations. Recovery underway.' },
+                { time: '3:35 AM PDT', text: 'Issue is "fully mitigated". Services showing significant recovery signs.' },
+                { time: '3:03 AM PDT', text: 'Continued recovery across most affected services. Global services relying on primary region also recovering.' },
+                { time: '2:40 AM PDT', text: 'Major spike in outage reports. Problem identified in primary region.' },
+                { time: '12:11 AM PDT', text: 'Initial incident reported. Database service experiencing elevated error rates and latencies.' }
+            ],
+            
+            // Company Contact Information
+            company: "Inks N Stuff IT",
+            contacts: [
+                {
+                    icon: '📧',
+                    label: 'Email Support',
+                    value: 'support@inksnstuff.com'
+                },
+                {
+                    icon: '📱',
+                    label: 'Phone Support (24/7)',
+                    value: '+1 (555) 123-4567'
+                },
+                {
+                    icon: '💬',
+                    label: 'Live Chat',
+                    value: 'Available on our website support portal'
+                },
+                {
+                    icon: '🌐',
+                    label: 'Support Portal',
+                    value: 'https://support.inksnstuff.com'
+                }
+            ]
+        };
+        
+        // ========================================
+        // END CUSTOMIZATION SECTION
+        // ========================================
+
+        // Update header information
+        document.getElementById('headerTitle').textContent = outageConfig.title;
+        document.getElementById('statusBadge').textContent = outageConfig.status;
+        document.getElementById('startTime').textContent = outageConfig.startTime;
+        document.getElementById('rootCause').textContent = outageConfig.rootCause;
+        document.getElementById('impact').textContent = outageConfig.impact;
+
+        // Populate tracker
+        const trackerContainer = document.getElementById('tracker');
+        outageConfig.trackerSteps.forEach((step, index) => {
+            const statusClass = `step-${step.status}`;
+            const symbol = step.status === 'complete' ? '✓' : step.status === 'active' ? '•' : '→';
+            
+            const div = document.createElement('div');
+            div.className = 'tracker-item';
+            div.innerHTML = `
+                <div class="tracker-step ${statusClass}">${symbol}</div>
+                <div class="tracker-text">
+                    <strong>${step.description}</strong>
+                    <div class="tracker-time">${step.details}</div>
+                </div>
+            `;
+            trackerContainer.appendChild(div);
+        });
+
+        // Populate services list
+        const serviceList = document.getElementById('serviceList');
+        const searchBox = document.getElementById('searchBox');
+        const noResults = document.getElementById('noResults');
+
+        function renderServices(filter = '') {
+            serviceList.innerHTML = '';
+            const filtered = outageConfig.affectedServices.filter(s => 
+                s.toLowerCase().includes(filter.toLowerCase())
+            );
+
+            if (filter && filtered.length === 0) {
+                noResults.style.display = 'block';
+            } else {
+                noResults.style.display = 'none';
+            }
+
+            filtered.forEach(service => {
+                const div = document.createElement('div');
+                div.className = 'affected-item';
+                div.textContent = service;
+                div.addEventListener('click', () => {
+                    div.classList.add('found');
+                });
+                serviceList.appendChild(div);
+            });
+        }
+
+        searchBox.addEventListener('input', (e) => {
+            renderServices(e.target.value);
+        });
+
+        // Populate updates
+        const updatesContainer = document.getElementById('updates');
+        outageConfig.updates.forEach((update, index) => {
+            const div = document.createElement('div');
+            div.className = 'update-item';
+            div.innerHTML = `
+                <div class="update-time">${update.time}</div>
+                <div class="update-text">${update.text}</div>
+            `;
+            div.style.animationDelay = `${index * 0.1}s`;
+            updatesContainer.appendChild(div);
+        });
+
+        // Populate contact information
+        document.getElementById('companyName').textContent = `📞 ${outageConfig.company}`;
+        const contactContainer = document.getElementById('contactInfo');
+        outageConfig.contacts.forEach(contact => {
+            const div = document.createElement('div');
+            div.className = 'contact-item';
+            div.innerHTML = `
+                <div class="contact-icon">${contact.icon}</div>
+                <div class="contact-details">
+                    <strong>${contact.label}</strong>
+                    ${contact.value}
+                </div>
+            `;
+            contactContainer.appendChild(div);
+        });
+
+        // Initial render
+        renderServices();
+    </script>
+</body>
+</html>
