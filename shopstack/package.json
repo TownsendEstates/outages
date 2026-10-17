@@ -1,0 +1,16 @@
+{
+  "name": "shopstack",
+  "private": true,
+  "type": "module",
+  "description": "Multi-tenant cloud shop management SaaS for tire & auto service businesses",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs && netlify dev",
+    "test": "node --test tests/engine.test.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.135.0",
+    "@supabase/supabase-js": "^2.118.0",
+    "stripe": "^23.0.0"
+  }
+}
