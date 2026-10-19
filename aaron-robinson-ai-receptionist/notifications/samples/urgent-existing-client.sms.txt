@@ -1,0 +1,6 @@
+URGENT CALL
+Mark Chen 780.555.0222
+Reason: Existing client. Counter offer expires 6 pm today
+Summary: Mark Chen, current seller client, says the buyer's counter offer on 123 Test Street expires at 6 pm today. Live transfer attempted, no answer.
+Next: Call Mark back immediately about the counter offer.
+https://ai-line-radicalrobinson.netlify.app/admin/#call=SAMPLE

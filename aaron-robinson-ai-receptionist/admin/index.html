@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>AI Line Admin</title>
+<style>
+:root{--navy:#0D1B2A;--blue:#1D7FC4;--amber:#F4A225;--red:#B42318;--bg:#f4f5f7;--card:#fff;--ink:#111827;--muted:#6b7280;--line:#e5e7eb}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:16px}
+header{background:var(--navy);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+header h1{font-size:17px;margin:0}
+header small{display:block;color:#9fb3c8;font-size:12px;font-weight:400}
+main{max-width:860px;margin:0 auto;padding:16px}
+nav{display:flex;gap:6px;overflow-x:auto;margin-bottom:14px}
+nav button{flex:0 0 auto;border:1px solid var(--line);background:#fff;padding:9px 14px;border-radius:20px;font-size:14px;cursor:pointer}
+nav button.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:12px}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+input,select,textarea{width:100%;padding:11px;border:1px solid #cfd4dc;border-radius:8px;font-size:16px;background:#fff}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.row{grid-template-columns:1fr}}
+.btn{border:0;background:var(--blue);color:#fff;padding:11px 16px;border-radius:8px;font-size:15px;cursor:pointer}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:var(--red)}
+.btn:disabled{opacity:.5}
+.list-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.list-item:last-child{border-bottom:0}
+.pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;background:#eef2f7;color:#334155;margin-left:6px;vertical-align:middle}
+.pill.urgent{background:var(--red);color:#fff}.pill.vip{background:var(--amber);color:#111}.pill.high{background:#fde7c4;color:#7a4b00}
+.muted{color:var(--muted);font-size:13px}
+.msg{padding:10px 12px;border-radius:8px;margin:10px 0;font-size:14px}
+.msg.err{background:#fde8e8;color:#8a1c1c}.msg.ok{background:#e6f4ea;color:#1e6b34}
+pre{white-space:pre-wrap;font-family:inherit;font-size:14px;background:#f8fafc;padding:12px;border-radius:8px;max-height:420px;overflow:auto}
+.hide{display:none}
+#login{max-width:360px;margin:12vh auto}
+.check{display:flex;align-items:center;gap:8px;margin-top:12px}.check input{width:auto}
+</style>
+</head>
+<body>
+<header><div><h1>Radical Robinson AI Line</h1><small>Aaron Robinson, REALTOR&reg;, Century 21 Masters</small></div><button class="btn ghost hide" id="logout" style="padding:7px 12px;font-size:13px">Log out</button></header>
+
+<section id="login" class="card">
+  <h2 style="margin-top:0;font-size:18px">Enter PIN</h2>
+  <input id="pin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="PIN" maxlength="12">
+  <div id="loginMsg"></div>
+  <button class="btn" id="loginBtn" style="width:100%;margin-top:12px">Unlock</button>
+</section>
+
+<main id="app" class="hide">
+  <nav>
+    <button data-tab="vip" class="on">VIP list</button>
+    <button data-tab="calls">Call log</button>
+    <button data-tab="settings">Hours and retention</button>
+    <button data-tab="privacy">Privacy request</button>
+  </nav>
+
+  <section data-panel="vip">
+    <div class="card">
+      <h2 style="margin:0 0 4px;font-size:17px">VIP callers</h2>
+      <p class="muted" style="margin:0">If a VIP calls and you miss it, the AI greets them by name, takes a priority message and texts you right away. Add the same people to your phone's Favourites so they ring through Focus or Do Not Disturb.</p>
+      <div id="vipList" style="margin-top:8px"></div>
+      <button class="btn" id="vipAdd" style="margin-top:10px">Add VIP</button>
+    </div>
+    <div class="card hide" id="vipForm">
+      <h3 style="margin:0;font-size:16px" id="vipFormTitle">Add VIP</h3>
+      <input type="hidden" id="vId">
+      <div class="row">
+        <div><label>What the AI calls them</label><input id="vDisplay" placeholder="Mom"></div>
+        <div><label>Full name (optional)</label><input id="vFull" placeholder="Jane Robinson"></div>
+      </div>
+      <div class="row">
+        <div><label>Phone</label><input id="vPhone" inputmode="tel" placeholder="780.555.0100"></div>
+        <div><label>Relationship</label><input id="vRel" placeholder="Family, business partner, lender"></div>
+      </div>
+      <div class="row">
+        <div><label>Priority</label><select id="vPri"><option value="high">High: text me after the message</option><option value="critical">Critical: try live transfer first</option></select></div>
+        <div><label>Notes for you (not read to caller)</label><input id="vNotes"></div>
+      </div>
+      <div class="check"><input type="checkbox" id="vCrm"><label for="vCrm" style="margin:0">Log their calls in Follow Up Boss (leave off for family and personal contacts)</label></div>
+      <div class="check"><input type="checkbox" id="vActive" checked><label for="vActive" style="margin:0">Active</label></div>
+      <div id="vipMsg"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn" id="vipSave">Save</button>
+        <button class="btn ghost" id="vipCancel">Cancel</button>
+        <button class="btn danger hide" id="vipDelete">Remove</button>
+      </div>
+    </div>
+  </section>
+
+  <section data-panel="calls" class="hide">
+    <div class="card"><h2 style="margin:0 0 8px;font-size:17px">Recent calls</h2><div id="callList" class="muted">Loading...</div></div>
+    <div class="card hide" id="callDetail"></div>
+  </section>
+
+  <section data-panel="settings" class="hide">
+    <div class="card">
+      <h2 style="margin:0 0 4px;font-size:17px">Business hours (Edmonton time)</h2>
+      <p class="muted" style="margin:0">Outside these hours the AI tells callers Aaron will return the call next business day and does not attempt live transfers unless it is urgent.</p>
+      <div class="row">
+        <div><label>Start</label><input id="sStart" type="time"></div>
+        <div><label>End</label><input id="sEnd" type="time"></div>
+      </div>
+      <label>Days</label>
+      <div id="sDays" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      <h2 style="margin:18px 0 4px;font-size:17px">Retention</h2>
+      <p class="muted" style="margin:0">Recordings and transcripts are removed automatically after these periods. Confirm with your broker before shortening below brokerage record rules.</p>
+      <div class="row">
+        <div><label>Recording links kept (days)</label><input id="sRec" type="number" min="1" max="3650"></div>
+        <div><label>Transcripts kept (days)</label><input id="sTr" type="number" min="1" max="3650"></div>
+      </div>
+      <div id="setMsg"></div>
+      <button class="btn" id="setSave" style="margin-top:12px">Save settings</button>
+    </div>
+  </section>
+
+  <section data-panel="privacy" class="hide">
+    <div class="card">
+      <h2 style="margin:0 0 4px;font-size:17px">Delete a caller's data</h2>
+      <p class="muted" style="margin:0">Use when someone asks for their information to be removed (PIPA / PIPEDA). This removes every AI Line call record for that number. Then delete them in Follow Up Boss and in Ulio.ai call history, and reply to the person within 30 days.</p>
+      <label>Caller phone</label><input id="pPhone" inputmode="tel">
+      <div id="pMsg"></div>
+      <button class="btn danger" id="pDelete" style="margin-top:12px">Delete call records</button>
+    </div>
+  </section>
+</main>
+
+<script>
+const API = '/api/vip-admin';
+let token = null; try { token = sessionStorage.getItem('ailine_t'); } catch (e) {}
+let vips = [];
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pretty = (p) => { const d = String(p || '').replace(/\D/g, '').slice(-10); return d.length === 10 ? d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6) : (p || ''); };
+const note = (el, text, ok) => { $(el).innerHTML = text ? `<div class="msg ${ok ? 'ok' : 'err'}">${esc(text)}</div>` : ''; };
+
+async function call(action, args = {}) {
+  const r = await fetch(API, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action, token, ...args }) });
+  const data = await r.json().catch(() => ({ error: 'Server error' }));
+  if (r.status === 401 && action !== 'login') { logout(); throw new Error(data.error); }
+  if (!r.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+function showApp() { $('login').classList.add('hide'); $('app').classList.remove('hide'); $('logout').classList.remove('hide'); loadVips(); openFromHash(); }
+function logout() { token = null; try { sessionStorage.removeItem('ailine_t'); } catch (e) {} $('app').classList.add('hide'); $('logout').classList.add('hide'); $('login').classList.remove('hide'); }
+
+$('loginBtn').onclick = async () => {
+  note('loginMsg', '');
+  try { const d = await call('login', { pin: $('pin').value }); token = d.token; try { sessionStorage.setItem('ailine_t', token); } catch (e) {} $('pin').value = ''; showApp(); }
+  catch (e) { note('loginMsg', e.message); }
+};
+$('pin').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('loginBtn').click(); });
+$('logout').onclick = logout;
+
+document.querySelectorAll('nav button').forEach((b) => b.onclick = () => tab(b.dataset.tab));
+function tab(name) {
+  document.querySelectorAll('nav button').forEach((x) => x.classList.toggle('on', x.dataset.tab === name));
+  document.querySelectorAll('[data-panel]').forEach((p) => p.classList.toggle('hide', p.dataset.panel !== name));
+  if (name === 'calls') loadCalls();
+  if (name === 'settings') loadSettings();
+}
+
+// VIPs
+async function loadVips() {
+  try { vips = (await call('vip_list')).vips; } catch (e) { $('vipList').innerHTML = `<div class="msg err">${esc(e.message)}</div>`; return; }
+  $('vipList').innerHTML = vips.length ? vips.map((v) => `<div class="list-item"><div><strong>${esc(v.display_name)}</strong>${v.priority === 'critical' ? '<span class="pill urgent">critical</span>' : '<span class="pill vip">VIP</span>'}${v.active ? '' : '<span class="pill">paused</span>'}${v.sync_to_crm ? '<span class="pill">FUB</span>' : ''}<div class="muted">${esc(pretty(v.phone_e164))}${v.relationship ? ' &middot; ' + esc(v.relationship) : ''}</div></div><button class="btn ghost" data-edit="${v.id}">Edit</button></div>`).join('') : '<p class="muted">No VIPs yet.</p>';
+  document.querySelectorAll('[data-edit]').forEach((b) => b.onclick = () => editVip(vips.find((v) => v.id === b.dataset.edit)));
+}
+function editVip(v) {
+  v = v || {}; $('vipForm').classList.remove('hide'); note('vipMsg', '');
+  $('vipFormTitle').textContent = v.id ? 'Edit VIP' : 'Add VIP';
+  $('vId').value = v.id || ''; $('vDisplay').value = v.display_name || ''; $('vFull').value = v.full_name || '';
+  $('vPhone').value = v.phone_e164 ? pretty(v.phone_e164) : ''; $('vRel').value = v.relationship || '';
+  $('vPri').value = v.priority || 'high'; $('vNotes').value = v.notes || ''; $('vCrm').checked = !!v.sync_to_crm;
+  $('vActive').checked = v.active !== false; $('vipDelete').classList.toggle('hide', !v.id);
+  $('vipForm').scrollIntoView({ behavior: 'smooth' });
+}
+$('vipAdd').onclick = () => editVip(null);
+$('vipCancel').onclick = () => $('vipForm').classList.add('hide');
+$('vipSave').onclick = async () => {
+  const vip = { id: $('vId').value || undefined, display_name: $('vDisplay').value, full_name: $('vFull').value, phone: $('vPhone').value,
+    relationship: $('vRel').value, priority: $('vPri').value, notes: $('vNotes').value, sync_to_crm: $('vCrm').checked, active: $('vActive').checked };
+  try { await call('vip_save', { vip }); $('vipForm').classList.add('hide'); loadVips(); } catch (e) { note('vipMsg', e.message); }
+};
+$('vipDelete').onclick = async () => {
+  if (!confirm('Remove this VIP?')) return;
+  try { await call('vip_delete', { id: $('vId').value }); $('vipForm').classList.add('hide'); loadVips(); } catch (e) { note('vipMsg', e.message); }
+};
+
+// Calls
+async function loadCalls() {
+  try {
+    const { calls } = await call('calls_list', { limit: 100 });
+    $('callList').innerHTML = calls.length ? calls.map((c) => `<div class="list-item" style="cursor:pointer" data-call="${c.id}"><div><strong>${esc(c.caller_name || pretty(c.caller_phone_e164) || 'Unknown')}</strong>${c.urgency === 'urgent' ? '<span class="pill urgent">urgent</span>' : c.urgency === 'high' ? '<span class="pill high">priority</span>' : ''}${c.is_vip ? '<span class="pill vip">VIP</span>' : ''}${c.after_hours ? '<span class="pill">after hours</span>' : ''}<div class="muted">${new Date(c.created_at).toLocaleString('en-CA', { timeZone: 'America/Edmonton' })} &middot; ${esc(c.intent || '')} &middot; FUB: ${esc(c.fub_status || '')}</div><div style="font-size:14px;margin-top:4px">${esc((c.summary || '').slice(0, 160))}</div></div></div>`).join('') : 'No calls yet.';
+    document.querySelectorAll('[data-call]').forEach((el) => el.onclick = () => openCall(el.dataset.call));
+  } catch (e) { $('callList').innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
+}
+async function openCall(id) {
+  tab('calls');
+  const { call: c } = await call('call_get', { id });
+  if (!c) return;
+  const f = (k, v) => `<div><span class="muted">${k}:</span> ${esc(v || 'Not given')}</div>`;
+  $('callDetail').classList.remove('hide');
+  $('callDetail').innerHTML = `<h3 style="margin:0 0 6px">${esc(c.caller_name || 'Unknown caller')} <a href="tel:${esc(c.caller_phone_e164)}">${esc(pretty(c.caller_phone_e164))}</a></h3>
+  ${f('Type', c.intent)}${f('Urgency', c.urgency + (c.urgency_reason ? ', ' + c.urgency_reason : ''))}${f('Email', c.caller_email)}${f('Property or area', c.property_or_area)}${f('Timeline', c.timeline)}${f('Preapproval', c.preapproval_status)}${f('Best time', c.best_time_to_call)}${f('Appointment', c.appointment ? c.appointment.type + ' ' + c.appointment.start : 'None')}${f('Recording consent', c.recording_consent)}${f('Follow Up Boss', c.fub_status + (c.fub_error ? ': ' + c.fub_error : ''))}
+  <h4>Summary</h4><p>${esc(c.summary)}</p><h4>Next step</h4><p>${esc(c.next_step)}</p>
+  ${c.recording_url ? `<p><a class="btn" href="${esc(c.recording_url)}" target="_blank" rel="noopener">Play recording</a></p>` : '<p class="muted">Recording not available (declined, expired or not captured).</p>'}
+  <h4>Transcript</h4><pre>${esc(c.transcript || 'Transcript removed by retention policy or not captured.')}</pre>`;
+  $('callDetail').scrollIntoView({ behavior: 'smooth' });
+}
+function openFromHash() { const m = location.hash.match(/call=([\w-]+)/); if (m) openCall(m[1]); }
+
+// Settings
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+async function loadSettings() {
+  const { settings: s } = await call('settings_get');
+  $('sStart').value = String(s.business_hours_start).slice(0,5); $('sEnd').value = String(s.business_hours_end).slice(0,5);
+  $('sRec').value = s.recording_retention_days; $('sTr').value = s.transcript_retention_days;
+  $('sDays').innerHTML = DAYS.map((d, i) => `<label class="check" style="margin:0;color:var(--ink)"><input type="checkbox" value="${i+1}" ${s.business_days.includes(i+1) ? 'checked' : ''}>${d}</label>`).join('');
+}
+$('setSave').onclick = async () => {
+  const settings = { business_hours_start: $('sStart').value, business_hours_end: $('sEnd').value,
+    business_days: [...document.querySelectorAll('#sDays input:checked')].map((x) => Number(x.value)),
+    recording_retention_days: Number($('sRec').value), transcript_retention_days: Number($('sTr').value) };
+  try { await call('settings_save', { settings }); note('setMsg', 'Saved.', true); } catch (e) { note('setMsg', e.message); }
+};
+
+// Privacy
+$('pDelete').onclick = async () => {
+  if (!confirm('Permanently delete all AI Line call records for this number?')) return;
+  try { const d = await call('privacy_delete', { phone: $('pPhone').value }); note('pMsg', `Deleted ${d.deleted} call record(s). ${d.reminder}`, true); }
+  catch (e) { note('pMsg', e.message); }
+};
+
+window.addEventListener('hashchange', () => token && openFromHash());
+if (token) showApp();
+</script>
+</body>
+</html>

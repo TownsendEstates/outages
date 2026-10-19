@@ -1,0 +1,12 @@
+{
+  "name": "radical-robinson-ai-line",
+  "private": true,
+  "type": "module",
+  "description": "AI receptionist back end for Aaron Robinson, REALTOR(R), Century 21 Masters: Ulio.ai webhooks, VIP list, Follow Up Boss sync, alerts.",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "render-templates": "node tests/render-templates.mjs",
+    "fub-live-test": "node tests/fub-live-test.mjs"
+  }
+}

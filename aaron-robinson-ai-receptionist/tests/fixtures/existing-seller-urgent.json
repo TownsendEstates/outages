@@ -1,0 +1,32 @@
+{
+  "message": {
+    "type": "end-of-call-report",
+    "call": { "id": "test-existing-urgent-002", "customer": { "number": "+17805550222" } },
+    "startedAt": "2026-10-19T14:05:00Z",
+    "endedAt": "2026-10-19T14:08:10Z",
+    "artifact": {
+      "recordingUrl": "https://example.com/rec/test-existing-urgent-002.wav",
+      "messages": [
+        { "role": "assistant", "content": "Hi, you've reached Aaron Robinson with Century 21 Masters." },
+        { "role": "user", "content": "It's Mark Chen, our counter offer expires at 6 tonight and I need Aaron." }
+      ]
+    },
+    "analysis": {
+      "summary": "Mark Chen, current seller client, says the buyer's counter offer on 123 Test Street expires at 6 pm today. Live transfer attempted, no answer.",
+      "structuredData": {
+        "caller_name": "Mark Chen",
+        "callback_number": "+1 780 555 0222",
+        "caller_type": "existing_client",
+        "property_or_area": "123 Test Street NW, Edmonton",
+        "timeline": "Today, 6 pm deadline",
+        "preapproval_status": "not_applicable",
+        "urgency": "urgent",
+        "urgency_reason": "Counter offer expires 6 pm today",
+        "transfer_attempted": true,
+        "transfer_result": "no_answer",
+        "recording_consent": "given",
+        "next_step": "Call Mark back immediately about the counter offer."
+      }
+    }
+  }
+}

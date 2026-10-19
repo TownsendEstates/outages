@@ -1,0 +1,17 @@
+# Deploy this folder as its own Netlify site (Base directory: aaron-robinson-ai-receptionist).
+[build]
+  publish = "admin-site"
+  command = "mkdir -p admin-site/admin && cp admin/index.html admin-site/admin/index.html && printf '<meta http-equiv=refresh content=\"0;url=/admin/\">' > admin-site/index.html"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+    X-Robots-Tag = "noindex, nofollow"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self'; media-src https:; frame-ancestors 'none'"

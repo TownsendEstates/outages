@@ -1,0 +1,141 @@
+{
+  "_readme": "Ulio.ai agent build sheet for the Radical Robinson AI Line. Field names follow the Ulio white-label dashboard; if a label differs in your Ulio version, match by purpose. Replace every value in ANGLE_BRACKETS. Secrets never go in this file.",
+  "agent": {
+    "name": "Radical Robinson AI Line",
+    "client": "Aaron Robinson, REALTOR(R), Century 21 Masters",
+    "language": "en-CA",
+    "voice": {
+      "recommendation": "Warm, natural Canadian or neutral North American voice. Audition 3 voices with Aaron and let him pick.",
+      "speed": 1.0,
+      "interruption_sensitivity": "medium",
+      "backchannel": true,
+      "ambient_sound": "none"
+    },
+    "llm_temperature": 0.3,
+    "system_prompt_file": "agent/system-prompt.md",
+    "begin_message": "Hi, you've reached Aaron Robinson with Century 21 Masters. I'm Aaron's AI assistant. This call may be recorded to help Aaron follow up. How can I help?",
+    "begin_message_vip": "Hi {{vip_name}}, you've reached Aaron Robinson with Century 21 Masters. I'm Aaron's AI assistant, and Aaron couldn't get to the phone. This call may be recorded to help him follow up. I'll make sure he gets your message right away. What should I tell him?",
+    "begin_message_note": "If Ulio only allows one begin message, use the standard one and let the system prompt switch to the VIP version using {{is_vip}}.",
+    "max_call_duration_seconds": 900,
+    "end_call_after_silence_seconds": 20,
+    "voicemail_detection": false,
+    "recording": { "enabled": true, "stop_on_request": true },
+    "pii_redaction_in_transcripts": ["credit_card", "sin", "bank_account"]
+  },
+  "phone_number": {
+    "ulio_number": "<PROVISION AN EDMONTON 780 OR 587 NUMBER IN ULIO>",
+    "inbound_agent": "Radical Robinson AI Line",
+    "note": "Callers never see or dial this number. Aaron's carrier forwards missed calls to it."
+  },
+  "inbound_webhook": {
+    "purpose": "Fetch dynamic variables before the greeting (VIP, known contact, after hours).",
+    "url": "https://<NETLIFY-SITE>/api/caller-lookup?key=<ULIO_WEBHOOK_SECRET>",
+    "method": "POST",
+    "timeout_ms": 2500,
+    "fallback_variables": { "is_vip": "false", "vip_name": "", "known_contact": "false", "known_first_name": "", "after_hours": "false", "caller_phone": "", "local_time": "" }
+  },
+  "tools": [
+    {
+      "name": "lookup_caller",
+      "type": "custom_function",
+      "description": "Look up a phone number to see if the caller is a VIP or an existing contact. Use only if the caller gives a different callback number than the one they are calling from.",
+      "url": "https://<NETLIFY-SITE>/api/caller-lookup?key=<ULIO_WEBHOOK_SECRET>",
+      "method": "POST",
+      "parameters": { "type": "object", "properties": { "phone": { "type": "string", "description": "10 digit phone number" } }, "required": ["phone"] },
+      "speak_during_execution": false
+    },
+    {
+      "name": "send_priority_alert",
+      "type": "custom_function",
+      "description": "Immediately text Aaron during the call. Use for every VIP caller and every urgent call, as soon as you know the reason.",
+      "url": "https://<NETLIFY-SITE>/api/priority-alert?key=<ULIO_WEBHOOK_SECRET>",
+      "method": "POST",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "caller_name": { "type": "string" },
+          "callback_number": { "type": "string" },
+          "reason": { "type": "string", "description": "One line, facts only" },
+          "urgent": { "type": "boolean" }
+        },
+        "required": ["callback_number", "reason"]
+      },
+      "speak_during_execution": false
+    },
+    {
+      "name": "transfer_to_aaron",
+      "type": "transfer_call",
+      "description": "Warm transfer urgent callers to Aaron. Only for calls that meet the urgent rules, or VIPs with critical priority.",
+      "transfer_to": "<AARON CELL, E.164>",
+      "transfer_mode": "warm",
+      "warm_whisper_to_aaron": "Urgent AI Line transfer: {{caller_name}} about {{urgency_reason}}. Press 1 or say accept to take it.",
+      "ring_timeout_seconds": 15,
+      "show_caller_id": "original_caller",
+      "on_no_answer": "return_to_agent",
+      "loop_guard_note": "Ring timeout MUST be shorter than the carrier no-answer forwarding delay (set to 25 or 30 seconds, see routing/call-forwarding-setup.md). Otherwise an unanswered transfer forwards back into the AI line."
+    },
+    {
+      "name": "book_appointment",
+      "type": "calendar_booking",
+      "provider": "<Google Calendar or Microsoft 365, whichever Aaron uses. Connect in Ulio > Integrations > Calendar using Aaron's login>",
+      "calendar_id": "<Aaron's primary calendar>",
+      "timezone": "America/Edmonton",
+      "event_types": [
+        { "name": "Callback call", "duration_minutes": 15 },
+        { "name": "Buyer consultation call", "duration_minutes": 30 },
+        { "name": "Seller listing consultation", "duration_minutes": 60, "location_required": true },
+        { "name": "Showing request", "duration_minutes": 30, "location_required": true, "title_prefix": "REQUEST, NOT CONFIRMED: " }
+      ],
+      "buffer_minutes": 15,
+      "min_notice_hours": 2,
+      "booking_window_days": 21,
+      "event_title_template": "{{appointment_type}}: {{caller_name}} ({{callback_number}}) via AI Line",
+      "event_description_template": "Booked by the Radical Robinson AI Line. Summary: {{summary}}",
+      "send_calendar_invite_to_caller": false,
+      "caller_invite_note": "Leave off by default. A calendar invite to the caller is a transactional message, but keep it free of any promotional content if Aaron turns it on."
+    },
+    {
+      "name": "end_call",
+      "type": "end_call"
+    }
+  ],
+  "post_call_analysis": {
+    "summary_prompt": "Write 2 to 4 sentences, facts only, in plain English. Include the caller's request and any question they want Aaron to answer. No advice, no opinions.",
+    "fields": [
+      { "name": "caller_name", "type": "string" },
+      { "name": "caller_email", "type": "string" },
+      { "name": "callback_number", "type": "string" },
+      { "name": "caller_type", "type": "enum", "values": ["buyer", "seller", "buyer_and_seller", "landlord", "tenant", "investor", "existing_client", "vendor", "personal", "other"] },
+      { "name": "property_or_area", "type": "string" },
+      { "name": "timeline", "type": "string" },
+      { "name": "preapproval_status", "type": "enum", "values": ["yes", "no", "in_progress", "not_applicable", "unknown"] },
+      { "name": "best_time_to_call", "type": "string" },
+      { "name": "urgency", "type": "enum", "values": ["urgent", "high", "normal", "low"] },
+      { "name": "urgency_reason", "type": "string" },
+      { "name": "transfer_attempted", "type": "boolean" },
+      { "name": "transfer_result", "type": "enum", "values": ["connected", "no_answer", "declined", "not_attempted"] },
+      { "name": "recording_consent", "type": "enum", "values": ["given", "declined", "unknown"] },
+      { "name": "appointment_start", "type": "string", "description": "ISO 8601 with offset, empty if none" },
+      { "name": "appointment_end", "type": "string" },
+      { "name": "appointment_type", "type": "string" },
+      { "name": "appointment_address", "type": "string" },
+      { "name": "summary", "type": "string" },
+      { "name": "next_step", "type": "string" }
+    ]
+  },
+  "post_call_webhook": {
+    "url": "https://<NETLIFY-SITE>/api/ulio-post-call?key=<ULIO_WEBHOOK_SECRET>",
+    "events": ["call_analyzed"],
+    "method": "POST",
+    "note": "Send only the final analysed event if Ulio lets you choose. The endpoint ignores call_started and call_ended."
+  },
+  "ulio_native_notifications": {
+    "sms": "OFF (the webhook sends the branded alert, avoids duplicates)",
+    "email": "OFF (same reason)",
+    "keep_on_as_backup_for_first_two_weeks": "Optional. Turn on Ulio's own email summary to Scott only, as a safety net during launch."
+  },
+  "follow_up_boss": {
+    "native_connector": "If your Ulio account shows a native Follow Up Boss connector, leave it OFF. Two integrations would create duplicate leads. The webhook in this package handles create, match, notes, calls, tags, appointment and assignment.",
+    "zapier_fallback": "Only if the Netlify functions cannot be used: Zapier trigger Webhooks by Zapier (catch hook) -> Follow Up Boss 'Find Person' by phone -> Paths: found = 'Add Note' + 'Add Tags'; not found = 'Create Event' (source Radical Robinson AI Line). Note: the Netlify path is tested; the Zapier path is not."
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "event": "call_analyzed",
+  "call": {
+    "call_id": "test-vip-003",
+    "from_number": "+15872004953",
+    "start_timestamp": 1760911200000,
+    "end_timestamp": 1760911290000,
+    "transcript": "AI: Hi Scott, Aaron couldn't get to the phone...",
+    "call_analysis": {
+      "call_summary": "Scott called about the AI line setup and wants a call back today.",
+      "custom_analysis_data": { "caller_type": "personal", "urgency": "normal", "next_step": "Call Scott back today.", "recording_consent": "given" }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "event": "call_analyzed",
+  "call": {
+    "call_id": "test-new-buyer-001",
+    "from_number": "+17805550111",
+    "to_number": "+15875550000",
+    "start_timestamp": 1760893200000,
+    "end_timestamp": 1760893440000,
+    "recording_url": "https://example.com/rec/test-new-buyer-001.wav",
+    "transcript": "AI: Hi, you've reached Aaron Robinson with Century 21 Masters...\nCaller: Hi, I'm Priya Sharma, we're looking to buy in Windermere in the spring.",
+    "call_analysis": {
+      "call_summary": "Priya Sharma is relocating from Calgary and wants to buy a detached home in Windermere in spring 2027. Preapproved with her bank.",
+      "custom_analysis_data": {
+        "caller_name": "Priya Sharma",
+        "caller_email": "priya.test@example.com",
+        "callback_number": "780-555-0111",
+        "caller_type": "buyer",
+        "property_or_area": "Windermere, southwest Edmonton",
+        "timeline": "Spring 2027",
+        "preapproval_status": "yes",
+        "best_time_to_call": "Weekdays after 5 pm",
+        "urgency": "normal",
+        "recording_consent": "given",
+        "next_step": "Aaron to call Priya to set up a buyer consultation.",
+        "appointment_start": "2026-10-21T23:30:00Z",
+        "appointment_type": "Buyer consultation call"
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+VIP CALL: Scott
+Scott 587.200.4953
+Reason: Personal
+Summary: Scott called about the AI line setup and wants a call back today.
+Next: Call Scott back today.
+https://ai-line-radicalrobinson.netlify.app/admin/#call=SAMPLE

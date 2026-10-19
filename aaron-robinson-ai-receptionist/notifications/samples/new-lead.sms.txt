@@ -1,0 +1,7 @@
+New AI Line call
+Priya Sharma 780.555.0111
+Reason: Buyer
+Summary: Priya Sharma is relocating from Calgary and wants to buy a detached home in Windermere in spring 2027. Preapproved with her bank.
+Next: Aaron to call Priya to set up a buyer consultation.
+Booked: Buyer consultation call, Wed, Oct 21, 5:30 p.m., Windermere, southwest Edmonton
+https://ai-line-radicalrobinson.netlify.app/admin/#call=SAMPLE
