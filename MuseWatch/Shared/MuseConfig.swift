@@ -85,7 +85,9 @@ struct MuseConfig: Codable, Equatable {
 
     var endpointURL: URL? {
         let trimmed = baseURL.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard var url = URL(string: trimmed.hasSuffix("/") ? String(trimmed.dropLast()) : trimmed) else { return nil }
+        guard var url = URL(string: trimmed.hasSuffix("/") ? String(trimmed.dropLast()) : trimmed),
+              url.scheme?.lowercased() == "https", url.host() != nil,
+              url.user == nil, url.password == nil else { return nil } // HTTPS only, no embedded credentials
         url.append(path: apiMode.path)
         return url
     }

@@ -36,9 +36,23 @@ final class ConversationStore {
         self.limit = limit
         let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         fileURL = dir.appending(path: "conversations.json")
+        load()
+    }
+
+    /// True when the history file exists but couldn't be read yet (e.g. the iPhone app was woken
+    /// in the background by the watch while the phone was locked). Saving is blocked until it loads,
+    /// so a locked launch can never overwrite real history with an empty list.
+    private var pendingLoad = false
+
+    private func load() {
+        guard FileManager.default.fileExists(atPath: fileURL.path()) else { pendingLoad = false; return }
         if let data = try? Data(contentsOf: fileURL),
            let saved = try? JSONDecoder().decode([Conversation].self, from: data) {
-            conversations = saved
+            let unsaved = conversations.filter { convo in !saved.contains { $0.id == convo.id } }
+            conversations = unsaved + saved
+            pendingLoad = false
+        } else {
+            pendingLoad = true
         }
     }
 
@@ -84,8 +98,31 @@ final class ConversationStore {
     }
 
     private func save() {
-        if let data = try? JSONEncoder().encode(conversations) {
-            try? data.write(to: fileURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        if pendingLoad { load() }
+        guard !pendingLoad, let data = try? JSONEncoder().encode(conversations) else { return }
+        #if os(iOS)
+        // History is only written from the foreground on iPhone, so use the strongest class:
+        // unreadable whenever the phone is locked.
+        let protection: Data.WritingOptions = .completeFileProtection
+        #else
+        // The watch may finish a reply just as the wrist drops; keep it writable after first unlock.
+        let protection: Data.WritingOptions = .completeFileProtectionUntilFirstUserAuthentication
+        #endif
+        do {
+            try data.write(to: fileURL, options: [.atomic, protection])
+            var url = fileURL
+            var values = URLResourceValues()
+            values.isExcludedFromBackup = true // keep chats out of iCloud/computer backups
+            try? url.setResourceValues(values)
+        } catch {
+            // Locked mid-write: the in-memory copy is kept and saved on the next change or when the app returns.
         }
+    }
+
+    /// Call when the app comes back to the foreground: loads history a locked launch couldn't read,
+    /// then flushes anything a locked write missed.
+    func refresh() {
+        if pendingLoad { load() }
+        save()
     }
 }

@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ChatView: View {
     @Environment(ConversationStore.self) private var store
@@ -6,6 +7,8 @@ struct ChatView: View {
     @State private var isSending = false
     @State private var errorText: String?
     @FocusState private var focused: Bool
+    @EnvironmentObject private var sync: WatchSync
+    @State private var avatar = AvatarStore.load()
 
     private var config: MuseConfig { ConfigStore.load() }
 
@@ -16,14 +19,14 @@ struct ChatView: View {
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: 12) {
                             if store.current?.messages.isEmpty ?? true {
-                                EmptyChat(prompts: config.quickPrompts) { draft = $0; focused = true }
+                                EmptyChat(avatar: avatar, prompts: config.quickPrompts) { draft = $0; focused = true }
                             }
                             ForEach(store.current?.messages ?? []) { message in
-                                MessageBubble(message: message).id(message.id)
+                                MessageBubble(message: message, avatar: avatar).id(message.id)
                             }
                             if isSending {
                                 HStack(spacing: 8) {
-                                    ProgressView()
+                                    AvatarView(image: avatar, size: 28, thinking: true)
                                     Text("\(config.agentName) is thinking…").foregroundStyle(.secondary)
                                 }
                                 .id("thinking")
@@ -58,6 +61,8 @@ struct ChatView: View {
                 .padding()
             }
             .navigationTitle(config.agentName)
+            .onReceive(sync.$avatarVersion) { _ in avatar = AvatarStore.load() }
+            .onAppear { avatar = AvatarStore.load() }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -87,12 +92,13 @@ struct ChatView: View {
 }
 
 private struct EmptyChat: View {
+    let avatar: UIImage?
     let prompts: [String]
     let pick: (String) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Image(systemName: "sparkles").font(.largeTitle).foregroundStyle(Theme.amber)
+            AvatarView(image: avatar, size: 64)
             Text("Ask anything — your conversations here and on your Apple Watch use the same Muse agent.")
                 .foregroundStyle(.secondary)
             ForEach(prompts, id: \.self) { prompt in
@@ -106,10 +112,12 @@ private struct EmptyChat: View {
 
 struct MessageBubble: View {
     let message: ChatMessage
+    var avatar: UIImage? = AvatarStore.load()
 
     var body: some View {
-        HStack {
+        HStack(alignment: .top, spacing: 8) {
             if message.role == .user { Spacer(minLength: 40) }
+            if message.role == .assistant { AvatarView(image: avatar, size: 28) }
             Text(LocalizedStringKey(message.text)) // renders basic markdown
                 .textSelection(.enabled)
                 .padding(12)
@@ -117,7 +125,11 @@ struct MessageBubble: View {
                             in: RoundedRectangle(cornerRadius: 16))
                 .foregroundStyle(message.role == .user ? .white : .primary)
                 .contextMenu {
-                    Button("Copy", systemImage: "doc.on.doc") { UIPasteboard.general.string = message.text }
+                    Button("Copy", systemImage: "doc.on.doc") {
+                        // Clears itself from the clipboard after 5 minutes.
+                        UIPasteboard.general.setItems([[UTType.plainText.identifier: message.text]],
+                                                      options: [.expirationDate: Date().addingTimeInterval(300)])
+                    }
                     ShareLink(item: message.text)
                 }
             if message.role == .assistant { Spacer(minLength: 40) }

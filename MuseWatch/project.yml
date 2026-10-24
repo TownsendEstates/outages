@@ -29,7 +29,8 @@ targets:
         CFBundleDisplayName: Muse Watch
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
-        UIBackgroundModes: [fetch]
+        NSFaceIDUsageDescription: Face ID keeps your Muse conversations private.
+        ITSAppUsesNonExemptEncryption: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ca.townsendestates.musewatch
@@ -51,6 +52,11 @@ targets:
         WKApplication: true
         WKCompanionAppBundleIdentifier: ca.townsendestates.musewatch
         WKRunsIndependentlyOfCompanionApp: false
+        ITSAppUsesNonExemptEncryption: false
+    entitlements:
+      path: Watch/MuseWatchWatch.entitlements
+      properties:
+        com.apple.security.application-groups: [group.ca.townsendestates.musewatch]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ca.townsendestates.musewatch.watchkitapp
@@ -62,12 +68,18 @@ targets:
     platform: watchOS
     sources:
       - path: WatchWidget
+      - path: Shared/AvatarStore.swift
+      - path: Shared/Theme.swift
     info:
       path: WatchWidget/Info.plist
       properties:
         CFBundleDisplayName: Muse
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: WatchWidget/MuseWatchComplication.entitlements
+      properties:
+        com.apple.security.application-groups: [group.ca.townsendestates.musewatch]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ca.townsendestates.musewatch.watchkitapp.complication

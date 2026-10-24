@@ -6,10 +6,22 @@ struct WatchHomeView: View {
     @State private var path: [UUID] = []
     @State private var draft = ""
     @State private var config = ConfigStore.load()
+    @State private var avatar = AvatarStore.load()
 
     var body: some View {
         NavigationStack(path: $path) {
             List {
+                Section {
+                    HStack(spacing: 10) {
+                        AvatarView(image: avatar, size: 44)
+                        VStack(alignment: .leading) {
+                            Text(config.agentName).font(.headline)
+                            Text("Tap below to ask").font(.caption2).foregroundStyle(.secondary)
+                        }
+                    }
+                    .listRowBackground(Color.clear)
+                }
+
                 Section {
                     // Tapping opens the system input sheet: dictation, Scribble or keyboard.
                     TextField("Ask \(config.agentName)", text: $draft)
@@ -42,12 +54,10 @@ struct WatchHomeView: View {
                     }
                 }
             }
-            .navigationTitle {
-                Label(config.agentName, systemImage: "sparkles").foregroundStyle(Theme.amber)
-            }
             .navigationDestination(for: UUID.self) { WatchConversationView(conversationID: $0) }
         }
         .onReceive(sync.$lastSync) { _ in config = ConfigStore.load() }
+        .onReceive(sync.$avatarVersion) { _ in avatar = AvatarStore.load() }
         .onOpenURL { _ in path = [] } // complication tap lands on the Ask field
     }
 

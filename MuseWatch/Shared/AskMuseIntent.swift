@@ -26,6 +26,8 @@ enum MuseRouter {
 struct AskMuseIntent: AppIntent {
     static var title: LocalizedStringResource = "Ask Muse"
     static var description = IntentDescription("Ask your Muse AI agent a question and hear the answer.")
+    /// Siri won't run this from a locked iPhone or an off-wrist/locked watch.
+    static var authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
 
     @Parameter(title: "Question", requestValueDialog: "What do you want to ask Muse?")
     var question: String

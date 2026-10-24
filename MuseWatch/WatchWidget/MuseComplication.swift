@@ -16,28 +16,46 @@ struct MuseProvider: TimelineProvider {
 
 struct MuseComplicationView: View {
     @Environment(\.widgetFamily) private var family
-    private let amber = Color(red: 244 / 255, green: 162 / 255, blue: 37 / 255)
+    @Environment(\.widgetRenderingMode) private var renderingMode
+    private let avatar = AvatarStore.load()
 
     var body: some View {
         switch family {
         case .accessoryRectangular:
-            HStack {
-                Image(systemName: "sparkles").font(.title3).foregroundStyle(amber)
+            HStack(spacing: 8) {
+                avatarImage(size: 40)
                 VStack(alignment: .leading) {
-                    Text("Muse").font(.headline)
+                    Text("Muse").font(.headline).widgetAccentable()
                     Text("Tap to ask").font(.caption).foregroundStyle(.secondary)
                 }
             }
         case .accessoryInline:
             Label("Ask Muse", systemImage: "sparkles")
         case .accessoryCorner:
-            Image(systemName: "sparkles").font(.title2).foregroundStyle(amber)
+            avatarImage(size: 32)
                 .widgetLabel("Muse")
         default:
             ZStack {
                 AccessoryWidgetBackground()
-                Image(systemName: "sparkles").font(.title2).foregroundStyle(amber)
+                avatarImage(size: 44)
             }
+        }
+    }
+
+    /// Photo avatar in full colour; tinted watch faces tint it automatically.
+    @ViewBuilder
+    private func avatarImage(size: CGFloat) -> some View {
+        if let avatar {
+            Image(uiImage: avatar)
+                .resizable()
+                .scaledToFill()
+                .frame(width: size, height: size)
+                .clipShape(Circle())
+        } else {
+            Image(systemName: "sparkles")
+                .font(.system(size: size * 0.5, weight: .semibold))
+                .foregroundStyle(renderingMode == .fullColor ? Theme.amber : .primary)
+                .widgetAccentable()
         }
     }
 }

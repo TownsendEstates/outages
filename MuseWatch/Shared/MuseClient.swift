@@ -12,7 +12,7 @@ enum MuseError: LocalizedError {
         case .missingKey:
             return "No API key. Add it in the iPhone app's Settings."
         case .badURL:
-            return "The base URL in Settings isn't valid."
+            return "The base URL in Settings isn't valid. It must start with https://."
         case .http(401, _):
             return "API key was rejected (401). Check the key in Settings."
         case .http(403, let body):
@@ -34,6 +34,19 @@ enum MuseError: LocalizedError {
 /// Talks to Muse Spark through any OpenAI-compatible endpoint
 /// (Meta Model API, OpenRouter, or a custom gateway).
 struct MuseClient {
+    /// No disk cache, no cookies, no credential storage: prompts and replies never touch URLCache.
+    private static let session: URLSession = {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.urlCache = nil
+        configuration.httpCookieStorage = nil
+        configuration.httpShouldSetCookies = false
+        configuration.urlCredentialStorage = nil
+        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
+        configuration.tlsMinimumSupportedProtocolVersion = .TLSv12
+        configuration.waitsForConnectivity = false
+        return URLSession(configuration: configuration, delegate: RedirectBlocker(), delegateQueue: nil)
+    }()
+
     var config: MuseConfig
     var apiKey: String?
 
@@ -76,13 +89,13 @@ struct MuseClient {
         let data: Data
         let response: URLResponse
         do {
-            (data, response) = try await URLSession.shared.data(for: request)
+            (data, response) = try await Self.session.data(for: request)
         } catch {
             throw MuseError.network(error.localizedDescription)
         }
 
         if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
-            throw MuseError.http(http.statusCode, Self.errorMessage(from: data))
+            throw MuseError.http(http.statusCode, Self.sanitize(Self.errorMessage(from: data)))
         }
 
         guard let text = Self.replyText(from: data, mode: config.apiMode)?
@@ -116,6 +129,13 @@ struct MuseClient {
 
     // MARK: - Parsing
 
+    /// Server error bodies are shown to the user; keep them short and strip anything that looks like a key.
+    static func sanitize(_ text: String) -> String {
+        let short = String(text.prefix(200))
+        return short.replacingOccurrences(of: #"(sk|or|key)[-_][A-Za-z0-9_\-]{8,}"#, with: "[redacted]",
+                                          options: .regularExpression)
+    }
+
     static func replyText(from data: Data, mode: APIMode) -> String? {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
 
@@ -148,5 +168,13 @@ struct MuseClient {
             if let message = json["message"] as? String { return message }
         }
         return String(data: data.prefix(200), encoding: .utf8) ?? ""
+    }
+}
+
+/// Refuses HTTP redirects so the Authorization header can never follow a redirect to another host.
+private final class RedirectBlocker: NSObject, URLSessionTaskDelegate {
+    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
+                    newRequest request: URLRequest) async -> URLRequest? {
+        nil
     }
 }

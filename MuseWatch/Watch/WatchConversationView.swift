@@ -9,6 +9,7 @@ struct WatchConversationView: View {
     @State private var isSending = false
     @State private var errorText: String?
     @State private var followUp = ""
+    @State private var avatar = AvatarStore.load()
 
     private var messages: [ChatMessage] {
         store.conversations.first { $0.id == conversationID }?.messages ?? []
@@ -19,6 +20,9 @@ struct WatchConversationView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(messages) { message in
+                        if message.role == .assistant {
+                            AvatarView(image: avatar, size: 22)
+                        }
                         Text(message.text)
                             .font(message.role == .user ? .footnote : .body)
                             .foregroundStyle(message.role == .user ? Theme.amber : .primary)
@@ -30,8 +34,11 @@ struct WatchConversationView: View {
                     }
 
                     if isSending {
-                        HStack { ProgressView().frame(width: 20); Text("Thinking…").font(.footnote) }
-                            .id("thinking")
+                        HStack(spacing: 8) {
+                            AvatarView(image: avatar, size: 36, thinking: true)
+                            Text("Thinking…").font(.footnote)
+                        }
+                        .id("thinking")
                     }
 
                     if let errorText {
