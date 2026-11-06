@@ -1,0 +1,17 @@
+# Edge function settings for `supabase functions deploy`
+# These functions authenticate callers themselves (DCA key, PIN, cron secret, or staff JWT),
+# so the gateway's JWT check is disabled for them.
+[functions.pin-login]
+verify_jwt = false
+
+[functions.dca-ingest]
+verify_jwt = false
+
+[functions.accounting]
+verify_jwt = false   # OAuth redirect from Xero/Intuit arrives without a JWT; other actions check the staff JWT
+
+[functions.hubspot-sync]
+verify_jwt = false   # staff JWT checked inside via requireStaff()
+
+[functions.fleet-jobs]
+verify_jwt = false   # protected by x-cron-secret

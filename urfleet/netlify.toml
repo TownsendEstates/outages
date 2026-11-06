@@ -1,0 +1,15 @@
+# Netlify site for the UrFleet Fleet Manager web app.
+# In Netlify: "Base directory" = urfleet   (publish dir is relative to it)
+[build]
+  publish = "app"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    X-Robots-Tag = "noindex, nofollow"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://*.supabase.co; form-action 'self' mailto:; frame-ancestors 'none'; base-uri 'self'"

@@ -1,0 +1,49 @@
+name: UrFleet DCA — test & build
+
+on:
+  push:
+    paths: ["urfleet/dca/**", ".github/workflows/urfleet-dca.yml"]
+  pull_request:
+    paths: ["urfleet/dca/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.8", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Unit tests (SNMP simulator)
+        working-directory: urfleet/dca
+        run: python -m unittest discover -s tests -v
+
+  build-windows:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build urfleet-dca.exe
+        run: |
+          python -m pip install pyinstaller
+          python -m PyInstaller --onefile --console --name urfleet-dca --distpath dist urfleet/dca/urfleet_dca.py
+          dist\urfleet-dca.exe version
+      - name: Package installer
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force pkg | Out-Null
+          Copy-Item dist\urfleet-dca.exe, urfleet\dca\install\install-windows.ps1, urfleet\dca\dca.example.json pkg\
+      - uses: actions/upload-artifact@v4
+        with:
+          name: urfleet-dca-windows
+          path: pkg/

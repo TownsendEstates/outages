@@ -1,0 +1,19 @@
+{
+  "endpoint": "https://YOUR-PROJECT.supabase.co/functions/v1/dca-ingest",
+  "key": "dca_paste_the_key_shown_when_you_created_the_install",
+  "site_name": "Main office",
+  "ranges": ["192.168.1.0/24"],
+  "exclude": [],
+  "communities": ["public"],
+  "snmp_version": "2c",
+  "snmp_port": 161,
+  "timeout": 1.5,
+  "retries": 1,
+  "workers": 64,
+  "interval_minutes": 240,
+  "full_rescan_hours": 24,
+  "verify_tls": true,
+  "proxy": "",
+  "log_level": "INFO",
+  "counter_profiles": {}
+}
