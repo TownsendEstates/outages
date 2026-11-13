@@ -1,0 +1,10 @@
+project_id = "statusping"
+
+# Called by the signed-in owner's app; the function also re-checks ownership.
+[functions.notify-incident]
+verify_jwt = true
+
+# Called by RevenueCat, which has no Supabase JWT. Protected by the shared
+# secret REVENUECAT_WEBHOOK_SECRET instead.
+[functions.revenuecat-webhook]
+verify_jwt = false

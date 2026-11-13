@@ -1,0 +1,10 @@
+# Web build of the app: public status pages (/s/<code>) and the owner dashboard.
+[build]
+  command = "npx expo export --platform web"
+  publish = "dist"
+
+# Single-page app: every path is handled by the client router.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
